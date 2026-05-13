@@ -62,11 +62,17 @@
   <Target Name="DeployToBepInEx" AfterTargets="Build">
     <PropertyGroup>
       <PluginDir>C:\Program Files (x86)\Steam\steamapps\common\Solar Expanse\BepInEx\plugins\TedditQueuedConstruction</PluginDir>
+      <RepoPluginDir>C:\Users\parft\Documents\SolarExpanseMods\solar-expanse-queued-construction\plugins\TedditQueuedConstruction</RepoPluginDir>
     </PropertyGroup>
     <MakeDir Directories="$(PluginDir)" />
+    <MakeDir Directories="$(RepoPluginDir)" />
     <Copy SourceFiles="$(OutputPath)$(AssemblyName).dll" DestinationFolder="$(PluginDir)" />
+    <Copy SourceFiles="$(OutputPath)$(AssemblyName).dll" DestinationFolder="$(RepoPluginDir)" />
     <Copy SourceFiles="$(OutputPath)$(AssemblyName).pdb" DestinationFolder="$(PluginDir)" Condition="Exists('$(OutputPath)$(AssemblyName).pdb')" />
-    <Message Text="Deployed to $(PluginDir)" Importance="High" />
+    <Copy SourceFiles="$(OutputPath)$(AssemblyName).pdb" DestinationFolder="$(RepoPluginDir)" Condition="Exists('$(OutputPath)$(AssemblyName).pdb')" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\TedditQueuedConstruction.cfg" DestinationFolder="$(PluginDir)" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\TedditQueuedConstruction.cfg" DestinationFolder="$(RepoPluginDir)" />
+    <Message Text="Deployed to $(PluginDir) and $(RepoPluginDir)" Importance="High" />
   </Target>
 
 </Project>

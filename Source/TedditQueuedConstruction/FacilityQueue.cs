@@ -6,9 +6,11 @@ using Data.ScriptableObject;
 using Extensions;
 using Game;
 using Game.Info;
+using Game.UI.Windows.Elements;
 using Game.UI.Windows.Elements.ObjectInfoElements;
 using Game.ObjectInfoDataScripts;
 using Game.UI.Windows.Elements.SpaceCraftConstructElements;
+using Game.UI.Windows.Windows;
 using HarmonyLib;
 using Manager;
 using ScriptableObjectScripts;
@@ -42,6 +44,11 @@ namespace TedditQueuedConstruction
                 .Where(facility => facility.facilityDescriptor != null && facility.facilityDescriptor.ShowOnUI)
                 .ToList();
 
+            if (Plugin.AdvancedQueuedRuns?.Value == true)
+            {
+                return BuildAdvancedFacilityPanelRows(data, facilities);
+            }
+
             rows.AddRange(facilities.Where(facility => facility.FinishConstructionBool));
 
             foreach (IGrouping<FacilityBaseDescriptor, Facility> group in facilities.Where(facility => !facility.FinishConstructionBool).GroupBy(facility => facility.facilityDescriptor))
@@ -58,6 +65,27 @@ namespace TedditQueuedConstruction
             }
 
             return rows.OrderBy(GetFacilitySortBucket).ToList();
+        }
+
+        private static List<Facility> BuildAdvancedFacilityPanelRows(ObjectInfoData data, List<Facility> facilities)
+        {
+            List<Facility> rows = new List<Facility>();
+            rows.AddRange(facilities.Where(facility => facility.FinishConstructionBool));
+
+            foreach (List<Facility> run in BuildContiguousUnfinishedRuns(facilities))
+            {
+                Facility representative = run
+                    .OrderBy(facility => IsQueued(facility) ? 1 : 0)
+                    .ThenByDescending(facility => facility.BuildProgress)
+                    .First();
+                int total = run.Count;
+                DisplayStackCounts[representative] = total;
+                DisplayStackQueuedCounts[representative] = run.Count(IsQueued);
+                DisplayStackBuildingCounts[representative] = total - DisplayStackQueuedCounts[representative];
+                rows.Add(representative);
+            }
+
+            return rows;
         }
 
         internal static int GetDisplayStackCount(Facility facility)
@@ -461,6 +489,13 @@ namespace TedditQueuedConstruction
             {
                 return;
             }
+
+            if (Plugin.AdvancedQueuedRuns?.Value == true)
+            {
+                TryStartAdvancedQueuedFacilities(data);
+                return;
+            }
+
             List<Facility> queued = data.ListFacility.Where(IsQueued).ToList();
             foreach (Facility facility in queued)
             {
@@ -481,6 +516,33 @@ namespace TedditQueuedConstruction
                 data.MarkIsDirty();
                 data.InvokeRefreshUIAddFacilityOrBuildProductItem();
                 Plugin.Log.LogInfo($"Started queued {facility.facilityDescriptor.ID} on {data.ObjectInfo.ObjectName}.");
+            }
+        }
+
+        private static void TryStartAdvancedQueuedFacilities(ObjectInfoData data)
+        {
+            List<Facility> firstRun = BuildContiguousUnfinishedRuns(data.ListFacility)
+                .FirstOrDefault(run => run.Any(IsQueued));
+            if (firstRun == null)
+            {
+                return;
+            }
+
+            foreach (Facility facility in firstRun.Where(IsQueued))
+            {
+                if (facility.facilityDescriptor == null)
+                {
+                    continue;
+                }
+                ResourcePrice price = GetPrice(facility.facilityDescriptor, data.ObjectInfo);
+                if (!CanAfford(data, price) || !data.RemoveResource(price))
+                {
+                    break;
+                }
+                facility.StartBuilding();
+                data.MarkIsDirty();
+                data.InvokeRefreshUIAddFacilityOrBuildProductItem();
+                Plugin.Log.LogInfo($"Started queued run item {facility.facilityDescriptor.ID} on {data.ObjectInfo.ObjectName}.");
             }
         }
 
@@ -542,6 +604,37 @@ namespace TedditQueuedConstruction
             return string.Join(Environment.NewLine, parts);
         }
 
+        internal static void ApplyQueuedNeedLabel(UIRowResources row, ObjectInfoData fallbackObjectInfoData = null)
+        {
+            if (row == null)
+            {
+                return;
+            }
+
+            ObjectInfoData objectInfoData = row.ResourcesData?.ObjectInfoData ?? fallbackObjectInfoData;
+            if (objectInfoData == null)
+            {
+                ObjectInfoWindow objectInfoWindow = Traverse.Create((ListElement)row).Field("parentWindow").GetValue<UIWindow>() as ObjectInfoWindow;
+                objectInfoData = objectInfoWindow?.ObjectInfoDataCurrent;
+            }
+
+            string stockpileWithNeed = FormatResourceStockpileWithQueuedNeed(row.ResourcesData, objectInfoData);
+            if (string.IsNullOrEmpty(stockpileWithNeed))
+            {
+                return;
+            }
+
+            TMP_Text valueText = Traverse.Create(row).Field("resourcesValueTextMeshPro").GetValue<TMP_Text>();
+            if (valueText != null)
+            {
+                valueText.text = stockpileWithNeed;
+            }
+            if (!row.gameObject.activeSelf)
+            {
+                row.gameObject.SetActive(true);
+            }
+        }
+
         internal static void MarkRowStack(Game.UI.Windows.Elements.ObjectInfoElements.UIRowFacility row, Facility facility)
         {
             TMP_Text textCount = Traverse.Create(row).Field("textCount").GetValue<TMP_Text>();
@@ -566,6 +659,27 @@ namespace TedditQueuedConstruction
             {
                 textCount.transform.parent.gameObject.SetActive(true);
             }
+        }
+
+        private static List<List<Facility>> BuildContiguousUnfinishedRuns(IEnumerable<Facility> facilities)
+        {
+            List<List<Facility>> runs = new List<List<Facility>>();
+            List<Facility> currentRun = null;
+            FacilityBaseDescriptor currentDescriptor = null;
+
+            foreach (Facility facility in facilities.Where(facility => facility != null && facility.facilityDescriptor != null && !facility.FinishConstructionBool))
+            {
+                if (currentRun == null || facility.facilityDescriptor != currentDescriptor)
+                {
+                    currentRun = new List<Facility>();
+                    runs.Add(currentRun);
+                    currentDescriptor = facility.facilityDescriptor;
+                }
+
+                currentRun.Add(facility);
+            }
+
+            return runs;
         }
 
         internal struct MissionPlannerDemandSummary
@@ -609,5 +723,6 @@ namespace TedditQueuedConstruction
                 Count = count;
             }
         }
+
     }
 }

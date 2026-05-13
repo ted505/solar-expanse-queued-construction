@@ -227,28 +227,16 @@ namespace TedditQueuedConstruction
     {
         private static void Postfix(UIRowResources __instance)
         {
-            ObjectInfoData objectInfoData = __instance.ResourcesData?.ObjectInfoData;
-            if (objectInfoData == null)
-            {
-                ObjectInfoWindow objectInfoWindow = Traverse.Create((ListElement)__instance).Field("parentWindow").GetValue<UIWindow>() as ObjectInfoWindow;
-                objectInfoData = objectInfoWindow?.ObjectInfoDataCurrent;
-            }
+            FacilityQueue.ApplyQueuedNeedLabel(__instance);
+        }
+    }
 
-            string stockpileWithNeed = FacilityQueue.FormatResourceStockpileWithQueuedNeed(__instance.ResourcesData, objectInfoData);
-            if (string.IsNullOrEmpty(stockpileWithNeed))
-            {
-                return;
-            }
-
-            TMP_Text valueText = Traverse.Create(__instance).Field("resourcesValueTextMeshPro").GetValue<TMP_Text>();
-            if (valueText != null)
-            {
-                valueText.text = stockpileWithNeed;
-            }
-            if (!__instance.gameObject.activeSelf)
-            {
-                __instance.gameObject.SetActive(true);
-            }
+    [HarmonyPatch(typeof(UIRowResources), "RowResourcesDataOnOnValueChange")]
+    internal static class ObjectInfoResourceRowValueChangePatch
+    {
+        private static void Postfix(UIRowResources __instance)
+        {
+            FacilityQueue.ApplyQueuedNeedLabel(__instance);
         }
     }
 

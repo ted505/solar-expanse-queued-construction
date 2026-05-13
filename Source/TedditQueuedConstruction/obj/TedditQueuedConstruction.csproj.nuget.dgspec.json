@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\parft\\Documents\\SolarExpanseMods\\TedditQueuedConstruction\\TedditQueuedConstruction.csproj": {}
+    "C:\\Users\\parft\\Documents\\SolarExpanseMods\\solar-expanse-queued-construction\\Source\\TedditQueuedConstruction\\TedditQueuedConstruction.csproj": {}
   },
   "projects": {
-    "C:\\Users\\parft\\Documents\\SolarExpanseMods\\TedditQueuedConstruction\\TedditQueuedConstruction.csproj": {
+    "C:\\Users\\parft\\Documents\\SolarExpanseMods\\solar-expanse-queued-construction\\Source\\TedditQueuedConstruction\\TedditQueuedConstruction.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\parft\\Documents\\SolarExpanseMods\\TedditQueuedConstruction\\TedditQueuedConstruction.csproj",
+        "projectUniqueName": "C:\\Users\\parft\\Documents\\SolarExpanseMods\\solar-expanse-queued-construction\\Source\\TedditQueuedConstruction\\TedditQueuedConstruction.csproj",
         "projectName": "TedditQueuedConstruction",
-        "projectPath": "C:\\Users\\parft\\Documents\\SolarExpanseMods\\TedditQueuedConstruction\\TedditQueuedConstruction.csproj",
+        "projectPath": "C:\\Users\\parft\\Documents\\SolarExpanseMods\\solar-expanse-queued-construction\\Source\\TedditQueuedConstruction\\TedditQueuedConstruction.csproj",
         "packagesPath": "C:\\Users\\parft\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\parft\\Documents\\SolarExpanseMods\\TedditQueuedConstruction\\obj\\",
+        "outputPath": "C:\\Users\\parft\\Documents\\SolarExpanseMods\\solar-expanse-queued-construction\\Source\\TedditQueuedConstruction\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\parft\\AppData\\Roaming\\NuGet\\NuGet.Config"
