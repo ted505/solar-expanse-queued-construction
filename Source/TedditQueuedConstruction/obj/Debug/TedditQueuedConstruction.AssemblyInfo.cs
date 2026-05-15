@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TedditQueuedConstruction")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+944bb4eb318766b762d4b68825ed6cc6aa43b987")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+fe7700f6fbe94b915c9d879dfbf5f52cb7b07bff")]
 [assembly: System.Reflection.AssemblyProductAttribute("TedditQueuedConstruction")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TedditQueuedConstruction")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
