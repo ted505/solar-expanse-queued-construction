@@ -25,7 +25,15 @@ namespace TedditQueuedConstruction
                 "When enabled, queued facilities are grouped and started by contiguous queue runs instead of merging every facility of the same type together.");
             PluginConfig.Save();
             Log.LogInfo("Teddit Queued Construction v0.2.0 loaded. Config: " + pluginConfigPath);
-            new Harmony("com.teddit.queuedconstruction").PatchAll();
+            // Patch each class independently so a patch whose target method is
+            // absent in the running game version can't abort the batch and take
+            // the rest of the mod's patches down with it.
+            var harmony = new Harmony("com.teddit.queuedconstruction");
+            foreach (var type in AccessTools.GetTypesFromAssembly(System.Reflection.Assembly.GetExecutingAssembly()))
+            {
+                try { harmony.CreateClassProcessor(type).Patch(); }
+                catch (System.Exception ex) { Log.LogWarning($"Skipped incompatible patch '{type.Name}': {ex.Message}"); }
+            }
         }
     }
 }
