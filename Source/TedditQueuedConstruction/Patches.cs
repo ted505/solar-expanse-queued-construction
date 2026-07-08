@@ -193,37 +193,45 @@ namespace TedditQueuedConstruction
         }
     }
 
-    [HarmonyPatch(typeof(Game.UI.Windows.Elements.ObjectInfoElements.UIRowFacility), "GetTooltipString")]
+    // GetTooltip returns (string mainText, List<(string,string)> stats, string footer).
+    // Modify Item1 (the main tooltip text) to inject the queued info / stack summary.
+    [HarmonyPatch(typeof(Game.UI.Windows.Elements.ObjectInfoElements.UIRowFacility), "GetTooltip")]
     internal static class ObjectInfoFacilityRowTooltipPatch
     {
-        private static bool Prefix(Game.UI.Windows.Elements.ObjectInfoElements.UIRowFacility __instance, ref string __result)
+        private static void Postfix(Game.UI.Windows.Elements.ObjectInfoElements.UIRowFacility __instance,
+            ref System.ValueTuple<string, System.Collections.Generic.List<System.ValueTuple<string, string>>, string> __result)
         {
-            if (!FacilityQueue.IsQueued(__instance.Facility))
-            {
-                return true;
-            }
-
-            __result = FacilityQueue.GetQueuedTooltip(__instance.Facility);
-            return false;
-        }
-    }
-
-    [HarmonyPatch(typeof(Game.UI.Windows.Elements.ObjectInfoElements.UIRowFacility), "GetTooltipString")]
-    internal static class ObjectInfoFacilityRowTooltipStackPatch
-    {
-        private static void Postfix(Game.UI.Windows.Elements.ObjectInfoElements.UIRowFacility __instance, ref string __result)
-        {
-            if (FacilityQueue.IsQueued(__instance.Facility))
+            Facility facility = __instance.Facility;
+            if (facility == null)
             {
                 return;
             }
 
-            __result = FacilityQueue.AddStackSummaryToTooltip(__instance.Facility, __result);
+            if (FacilityQueue.IsQueued(facility))
+            {
+                __result.Item1 = FacilityQueue.GetQueuedTooltip(facility);
+            }
+            else
+            {
+                __result.Item1 = FacilityQueue.AddStackSummaryToTooltip(facility, __result.Item1);
+            }
         }
     }
 
     [HarmonyPatch(typeof(UIRowResources), "SetData")]
     internal static class ObjectInfoResourceRowSetDataPatch
+    {
+        private static void Postfix(UIRowResources __instance)
+        {
+            FacilityQueue.ApplyQueuedNeedLabel(__instance);
+        }
+    }
+
+    // The value text is (re)painted by SetDataRowResourceData; patch it so the
+    // queued-need label survives the row's normal draw/refresh, not just live
+    // value-change events.
+    [HarmonyPatch(typeof(UIRowResources), "SetDataRowResourceData")]
+    internal static class ObjectInfoResourceRowSetDataRowResourceDataPatch
     {
         private static void Postfix(UIRowResources __instance)
         {
